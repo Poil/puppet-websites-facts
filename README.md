@@ -11,6 +11,9 @@ Known supported CMS
 * Drupal: 6, 7, 8
 * Wordpress: 4.x
 * PHPBB : 3.x
+* Magento
+* EZPublish
+* Typo3
 
 Example output
 ```yaml
