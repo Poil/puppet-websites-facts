@@ -113,11 +113,13 @@ if Facter.value(:kernel) == "Linux"
                                 v = nil
                                 File.open(plugin) do |plugin_info|
                                     plugin_file = plugin_info.read
-                                    n = /name\s*=\s*([\w]+)/.match(plugin_file)
-                                    v = /version\s*=\s*([\w\-.]+)/.match(plugin_file)
+                                    n = /name\s*=\s*([\w]+([\s]+[\w]+)?)$/.match(plugin_file)
+                                    vt = /version\s*=\s*"?([\w\-.]+)"?$/.match(plugin_file)
+                                    v = vt if vt and not vt[1].include?('VERSION')
                                 end
-                                if n && v
-                                    websites['websites'][domain]['lib'][n[1].downcase!] = { 'version' => v[1] }
+                                if n
+                                    v = ['', 'unknown'] if not v
+                                    websites['websites'][domain]['lib'][n[1].tr('"', '').downcase!] = { 'version' => v[1] }
                                 end
                             end
                         end
@@ -145,10 +147,12 @@ if Facter.value(:kernel) == "Linux"
                                 v = nil
                                 File.open(plugin) do |plugin_info|
                                     plugin_file = plugin_info.read
-                                    n = /name\s*:\s*'?([\w]+)'?/.match(plugin_file)
-                                    v = /version\s*:\s*'?([\w\-.]+)'?/.match(plugin_file)
+                                    n = /name\s*:\s*'?([\w]+([\s]+[\w]+)?)'?$/.match(plugin_file)
+                                    vt = /version\s*:\s*'?([\w\-.]+)'?$/.match(plugin_file)
+                                    v = vt if vt and not vt[1].include?('VERSION')
                                 end
-                                if n && v
+                                if n
+                                    v = ['', 'unknown'] if not v
                                     websites['websites'][domain]['lib'][n[1].downcase!] = { 'version' => v[1] }
                                 end
                             end
@@ -328,6 +332,20 @@ if Facter.value(:kernel) == "Linux"
                             if n[0]
                                 websites['websites'][domain]['type'] = 'magento'
                                 websites['websites'][domain]['version'] = n.join('.')
+                            end
+                        end
+                    end
+                end
+                # PHPMyAdmin
+                phpmyadmin_find = [File.join(root,'libraries','Config.class.php')]
+                phpmyadmin_find.each do |phpmyadmin|                  
+                    if File.exists?(phpmyadmin)
+                        File.open(phpmyadmin) do |site_info|
+                            site_file = site_info.read
+                            n = site_file.scan(/\s*\(.*PMA_VERSION.*,\s*'([\d\.]+)'\);/)
+                            if n[0]
+                                websites['websites'][domain]['type'] = 'phpmyadmin'
+                                websites['websites'][domain]['version'] = n[0].join('')
                             end
                         end
                     end
