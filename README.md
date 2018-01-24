@@ -14,6 +14,7 @@ Known supported CMS
 * Magento
 * EZPublish
 * Typo3
+* PhpMyAdmin
 
 Example output
 ```yaml
