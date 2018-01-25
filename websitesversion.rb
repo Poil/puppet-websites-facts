@@ -32,9 +32,9 @@ if Facter.value(:kernel) == "Linux"
                 text.each_line do |line|
                     # Apache
                     if line =~ /^\s*(ServerName)\s.*/
-                        server_name = line.gsub(/"|'/, '').sub('ServerName ', '').lstrip.chop
+                        server_name = line.gsub(/"|'/, '').sub('ServerName ', '').lstrip.strip
                     elsif line =~ /^\s*(DocumentRoot)\s.*/
-                        document_root = line.gsub(/"|'/, '').sub('DocumentRoot ', '').lstrip.chop
+                        document_root = line.gsub(/"|'/, '').sub('DocumentRoot ', '').lstrip.strip
                     elsif line =~ /^\s*<\/VirtualHost>/
                         vhosts_hash[server_name] = document_root if server_name && document_root
                         server_name = nil
@@ -57,9 +57,9 @@ if Facter.value(:kernel) == "Linux"
                 text.each_line do |line|
                     ## Nginx
                     if line =~ /^\s*(server_name)\s.*;/
-                        server_name = line.gsub(/"|'/, '').sub('server_name ', '').lstrip.chop.sub(';', '').split(' ')[0]
+                        server_name = line.gsub(/"|'/, '').sub('server_name ', '').lstrip.strip.sub(';', '').split(' ')[0]
                     elsif line =~ /^\s*(root)\s.*;/
-                        document_root = line.gsub(/"|'/, '').sub('root ', '').lstrip.chop.sub(';', '')
+                        document_root = line.gsub(/"|'/, '').sub('root ', '').lstrip.strip.sub(';', '')
                     elsif line =~ /^server \{/
                         # If there is more than one block in the current config file
                         vhosts_hash[server_name] = document_root if server_name && document_root
