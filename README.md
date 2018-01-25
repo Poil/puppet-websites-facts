@@ -15,6 +15,8 @@ Known supported CMS
 * EZPublish
 * Typo3
 * PhpMyAdmin
+* Mantis
+* SPIP
 
 Example output
 ```yaml

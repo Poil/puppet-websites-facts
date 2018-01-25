@@ -328,8 +328,8 @@ if Facter.value(:kernel) == "Linux"
                     if File.exists?(magento)
                         File.open(magento) do |site_info|
                             site_file = site_info.read
-                            n = site_file.scan(/\s+'(?:major|minor|revision|patch)'\s+=>\s+'(\d+)'/)
-                            if n[0]
+                            n = /\s+'(?:major|minor|revision|patch)'\s+=>\s+'(\d+)'/.match(site_file)
+                            if n
                                 websites['websites'][domain]['type'] = 'magento'
                                 websites['websites'][domain]['version'] = n.join('.')
                             end
@@ -342,10 +342,10 @@ if Facter.value(:kernel) == "Linux"
                     if File.exists?(phpmyadmin)
                         File.open(phpmyadmin) do |site_info|
                             site_file = site_info.read
-                            n = site_file.scan(/\s*\(.*PMA_VERSION.*,\s*'([\d\.]+)'\);/)
-                            if n[0]
+                            n = /\s*\(.*PMA_VERSION.*,\s*'([\d\.]+)'\);/.match(site_file)
+                            if n
                                 websites['websites'][domain]['type'] = 'phpmyadmin'
-                                websites['websites'][domain]['version'] = n[0].join('')
+                                websites['websites'][domain]['version'] = n[1]
                             end
                         end
                     end
@@ -356,10 +356,24 @@ if Facter.value(:kernel) == "Linux"
                     if File.exists?(spip)
                         File.open(spip) do |site_info|
                             site_file = site_info.read
-                            n = site_file.scan(/\$spip_version_branche\s*=\s*"?([\d\.]+)"?;$/)
-                            if n[0]
+                            n = /\$spip_version_branche\s*=\s*"?([\d\.]+)"?;$/.match(site_file)
+                            if n
                                 websites['websites'][domain]['type'] = 'spip'
-                                websites['websites'][domain]['version'] = n[0].join('')
+                                websites['websites'][domain]['version'] = n[1]
+                            end
+                        end
+                    end
+                end
+                # Mantis
+                mantis_find = [File.join(root,'core','constant_inc.php')]
+                mantis_find.each do |mantis|                  
+                    if File.exists?(mantis)
+                        File.open(mantis) do |site_info|
+                            site_file = site_info.read
+                            n = /define\(\s*'MANTIS_VERSION'\s*,\s*'([\.\d]+)'\s*\);/.match(site_file)
+                            if n
+                                websites['websites'][domain]['type'] = 'mantis'
+                                websites['websites'][domain]['version'] = n[1]
                             end
                         end
                     end
