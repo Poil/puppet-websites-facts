@@ -350,6 +350,20 @@ if Facter.value(:kernel) == "Linux"
                         end
                     end
                 end
+                # SPIP
+                spip_find = [File.join(root,'ecrire','inc_version.php')]
+                spip_find.each do |spip|                  
+                    if File.exists?(spip)
+                        File.open(spip) do |site_info|
+                            site_file = site_info.read
+                            n = site_file.scan(/\$spip_version_branche\s*=\s*"?([\d\.]+)"?;$/)
+                            if n[0]
+                                websites['websites'][domain]['type'] = 'spip'
+                                websites['websites'][domain]['version'] = n[0].join('')
+                            end
+                        end
+                    end
+                end
             end
         end
     end
