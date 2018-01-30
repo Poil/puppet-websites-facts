@@ -119,7 +119,7 @@ if Facter.value(:kernel) == "Linux"
                                 end
                                 if n
                                     v = ['', 'unknown'] if not v
-                                    websites['websites'][domain]['lib'][n[1].tr('"', '').downcase!] = { 'version' => v[1] }
+                                    websites['websites'][domain]['lib'][n[1].tr('"', '').downcase] = { 'version' => v[1] }
                                 end
                             end
                         end
@@ -153,7 +153,7 @@ if Facter.value(:kernel) == "Linux"
                                 end
                                 if n
                                     v = ['', 'unknown'] if not v
-                                    websites['websites'][domain]['lib'][n[1].downcase!] = { 'version' => v[1] }
+                                    websites['websites'][domain]['lib'][n[1].downcase] = { 'version' => v[1] }
                                 end
                             end
                         end
@@ -182,7 +182,7 @@ if Facter.value(:kernel) == "Linux"
                                 v = /Version\s*:\s*([\d.]+)/.match(plugin_file)
                             end
                             if n && v
-                                websites['websites'][domain]['lib'][n[1].downcase!] = { 'version' => v[1] }
+                                websites['websites'][domain]['lib'][n[1].downcase] = { 'version' => v[1] }
                             end
                         end
                     end
@@ -209,7 +209,7 @@ if Facter.value(:kernel) == "Linux"
                         end
                     end
                 end
-                # Typo3
+                # Typo3 - 4
                 typo3 = File.join(root,'t3lib','config_default.php')
                 if File.exists?(typo3)
                     File.open(typo3) do |site_info|
@@ -221,6 +221,34 @@ if Facter.value(:kernel) == "Linux"
                         end
                     end
                 end
+                # Typo3 - 7
+                typo3 = File.join(root,'typo3_src', 'typo3', 'sysext', 'core', 'ext_emconf.php')
+                if File.exists?(typo3)
+                    File.open(typo3) do |site_info|
+                        site_file = site_info.read
+                        n = /'version'\s*=>\s*'?([\d\w\-\.]+)'?,?$/.match(site_file)
+                        if n
+                            websites['websites'][domain]['type'] = 'typo3'
+                            websites['websites'][domain]['version'] = n[1]
+                            websites['websites'][domain]['lib'] = {}
+                        end
+                    end
+                    typo3_plugins = File.join(root, 'typo3conf', 'ext')
+                    if Dir.exists?(typo3_plugins)
+                        Dir.glob("#{typo3_plugins}/*/ext_emconf.php") do |plugin|
+                            n = nil
+                            v = nil
+                            File.open(plugin) do |plugin_info|
+                                plugin_file = plugin_info.read.gsub /\r\n?/, "\n"
+                                n = /'title'\s*=>\s*'?([\w|\d|\s|\-]+)'?,?$/.match(plugin_file)
+                                v = /'version'\s*=>\s*'?([\d|\w|\-|\.]+)'?,?$/.match(plugin_file)
+                            end
+                            if n and v
+                                websites['websites'][domain]['lib'][n[1].downcase] = { 'version' => v[1] }
+                            end
+                        end
+                    end
+                end
                 # Joomla
                 joomla_find = [File.join(root,'libraries','cms','version','version.php'),
                                File.join(root,'includes','version.php'), 
@@ -228,7 +256,7 @@ if Facter.value(:kernel) == "Linux"
                 joomla_find.each do |joomla|
                     if File.exists?(joomla)
                         File.open(joomla) do |site_info|
-                            site_file = site_info.read
+                            site_file = site_info.read.gsub /\r\n?/, "\n"
                             n = /\w+ \$RELEASE\s*=\s*'([\d.]+)'/.match(site_file)
                             o = /\w+ \$DEV_LEVEL\s*=\s*'([\d.]+)'/.match(site_file)
                             if n and o
@@ -253,7 +281,7 @@ if Facter.value(:kernel) == "Linux"
                         joomla_smtp = File.join(root,'libraries','phpmailer','smtp.php')
                         if File.exists?(joomla_smtp)
                             File.open(joomla_smtp) do |joomla_phpmailer|
-                                smtp_file = joomla_phpmailer.read
+                                smtp_file = joomla_phpmailer.read.gsub /\r\n?/, "\n"
                                 n = /^\|\s*Version:\s*([\.\d]+)\s*\|/.match(smtp_file)
                                 if n
                                     websites['websites'][domain]['lib'] = { 'phpmailer' => { 'version' => n[1] } }
@@ -266,7 +294,7 @@ if Facter.value(:kernel) == "Linux"
                 symfony = File.join(root, '..', 'lib', 'vendor', 'symfony', 'lib', 'autoload', 'sfCoreAutoload.class.php')
                 if File.exists?(symfony)
                     File.open(symfony) do |site_info|
-                        site_file = site_info.read
+                        site_file = site_info.read.gsub /\r\n?/, "\n"
                         n = /define\('SYMFONY_VERSION',\s*'([\.\d]+)'\);/.match(site_file)
                         if n
                             websites['websites'][domain]['type'] = 'symfony'
@@ -275,7 +303,7 @@ if Facter.value(:kernel) == "Linux"
                         symfony_swift = File.join(root, '..', 'lib', 'vendor', 'swiftmailer', 'swiftmailer', 'VERSION')
                         if File.exists?(symfony_swift)
                             File.open(symfony_swift) do |symfony_swiftmailer|
-                                smtp_file = symfony_swiftmailer.read
+                                smtp_file = symfony_swiftmailer.read.gsub /\r\n?/, "\n"
                                 n = /Swift-([\d.]+)/.match(smtp_file)
                                 if n
                                     websites['websites'][domain]['lib'] = { 'swiftmailer' => { 'version' => n[1] } }
@@ -288,7 +316,7 @@ if Facter.value(:kernel) == "Linux"
                 symfony = File.join(root,'..', 'vendor', 'symfony', 'symfony', 'src', 'Symfony', 'Component', 'HttpKernel', 'Kernel.php')
                 if File.exists?(symfony)
                     File.open(symfony) do |site_info|
-                        site_file = site_info.read
+                        site_file = site_info.read.gsub /\r\n?/, "\n"
                         n = /\s+const\s+VERSION\s+=\s+'([\d.]+)'/.match(site_file)
                         if n
                             websites['websites'][domain]['type'] = 'symfony'
@@ -297,7 +325,7 @@ if Facter.value(:kernel) == "Linux"
                         symfony_swift = File.join(root,'..','vendor','swiftmailer','swiftmailer','VERSION')
                         if File.exists?(symfony_swift)
                             File.open(symfony_swift) do |symfony_swiftmailer|
-                                smtp_file = symfony_swiftmailer.read
+                                smtp_file = symfony_swiftmailer.read.gsub /\r\n?/, "\n"
                                 n = /Swift-([\d.]+)/.match(smtp_file)
                                 if n
                                     websites['websites'][domain]['lib'] = { 'swiftmailer' => { 'version' => n[1] } }
@@ -312,7 +340,7 @@ if Facter.value(:kernel) == "Linux"
                 ezpublish_find.each do |ezpublish|                  
                     if File.exists?(ezpublish)
                         File.open(ezpublish) do |site_info|
-                            site_file = site_info.read
+                            site_file = site_info.read.gsub /\r\n?/, "\n"
                             n = site_file.scan(/\s+const\s+VERSION_(?:MAJOR|MINOR|RELEASE)\s+=\s+(\d+);/)
                             if n[0]
                                 websites['websites'][domain]['type'] = 'ezpublish'
@@ -327,7 +355,7 @@ if Facter.value(:kernel) == "Linux"
                 magento_find.each do |magento| 
                     if File.exists?(magento)
                         File.open(magento) do |site_info|
-                            site_file = site_info.read
+                            site_file = site_info.read.gsub /\r\n?/, "\n"
                             n = /\s+'(?:major|minor|revision|patch)'\s+=>\s+'(\d+)'/.match(site_file)
                             if n
                                 websites['websites'][domain]['type'] = 'magento'
@@ -341,7 +369,7 @@ if Facter.value(:kernel) == "Linux"
                 phpmyadmin_find.each do |phpmyadmin|                  
                     if File.exists?(phpmyadmin)
                         File.open(phpmyadmin) do |site_info|
-                            site_file = site_info.read
+                            site_file = site_info.read.gsub /\r\n?/, "\n"
                             n = /\s*\(.*PMA_VERSION.*,\s*'([\d\.]+)'\);/.match(site_file)
                             if n
                                 websites['websites'][domain]['type'] = 'phpmyadmin'
@@ -355,7 +383,7 @@ if Facter.value(:kernel) == "Linux"
                 spip_find.each do |spip|                  
                     if File.exists?(spip)
                         File.open(spip) do |site_info|
-                            site_file = site_info.read
+                            site_file = site_info.read.gsub /\r\n?/, "\n"
                             n = /\$spip_version_branche\s*=\s*"?([\d\.]+)"?;$/.match(site_file)
                             if n
                                 websites['websites'][domain]['type'] = 'spip'
@@ -369,7 +397,7 @@ if Facter.value(:kernel) == "Linux"
                 mantis_find.each do |mantis|                  
                     if File.exists?(mantis)
                         File.open(mantis) do |site_info|
-                            site_file = site_info.read
+                            site_file = site_info.read.gsub /\r\n?/, "\n"
                             n = /define\(\s*'MANTIS_VERSION'\s*,\s*'([\.\d]+)'\s*\);/.match(site_file)
                             if n
                                 websites['websites'][domain]['type'] = 'mantis'
